@@ -7,6 +7,7 @@ from minio import Minio
 import pandas as pd
 from pymongo import MongoClient
 import json
+from bson import ObjectId
 
 # loading variables from .env file
 load_dotenv() 
@@ -22,7 +23,8 @@ minioClient = Minio(
 # Configuração do cliente MongoDB
 mongoClient = MongoClient(os.getenv("STRING_CONNECTION"))
 db = mongoClient['dbDataset']
-collection = db['detailsdatasets']
+collectionDetailsDatasets = db['detailsdatasets']
+collectionDatasets = db['datasets']
 
 def process_file_and_update_db(idDataset, file_path):
     # Ler o arquivo com Pandas
@@ -44,9 +46,20 @@ def process_file_and_update_db(idDataset, file_path):
     
     # Realizar operações com Pandas
     record["details"] = details    
-    record['dataset'] = idDataset
+    record['dataset_id'] = idDataset
 
-    collection.insert_many([record])
+    # Define o filtro para encontrar o documento que você quer atualizar
+    filtro = {'_id': ObjectId(idDataset)}
+
+    # Define as alterações que você quer fazer
+    novo_valor = {'$set': {'status': 'PROCESSED'}}
+
+    print("filtro", filtro)
+    print("novo_valor", novo_valor)
+    print("record", [record])
+
+    collectionDatasets.update_one(filtro, novo_valor)
+    collectionDetailsDatasets.insert_many([record])
     print("Dados salvos no MongoDB com sucesso!")
  
 def receive_message(ch, method, properties, body):
