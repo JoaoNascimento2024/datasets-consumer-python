@@ -10,7 +10,7 @@ import json
 from bson import ObjectId
 
 # loading variables from .env file
-load_dotenv() 
+load_dotenv()
 
 # Configuração do cliente MinIO
 minioClient = Minio(
